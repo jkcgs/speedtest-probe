@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Hello</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+        integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
+</head>
+<body>
+  <div id="app" class="container">
+    <h3>Speedtest</h3>
+
+    <p>Current status: {{ status }}</p>
+
+    <div v-if="client">
+      <p>Your information:</p>
+      <ul>
+        <li>IP: {{ client.query }}</li>
+        <li>
+          ISP: {{ client.isp }}
+          <span v-if="client.isp != client.org">- {{ client.org }}</span>
+          - {{ client.ipType }}
+        </li>
+        <li>Location: {{ client.country }} ({{ client.countryCode }}) - {{ client.region }} - {{ client.city }}</li>
+      </ul>
+    </div>
+    <div v-if="result">
+      <div v-if="result.download > 0">
+        <p>Last result</p>
+        <ul>
+          <li>Download: {{ result.download | humanbits }}</li>
+          <li>Upload: {{ result.upload | humanbits }}</li>
+          <li>Latency: {{ result.ping }} ms</li>
+          <li>Transferred: {{ result.bytes_sent | humanbytes }} up, {{ result.bytes_received | humanbytes }} down </li>
+          <li>Timestamp: {{ result.timestamp }}</li>
+          <li>
+            Server:
+            <ul>
+              <li>Host: {{ result.server.sponsor }}</li>
+              <li>Location: {{ result.server.country }} - {{ result.server.name }}</li>
+              <li>Host: {{ result.server.host }}</li>
+              <li>Distance: {{ result.server.d.toFixed(2) }} km</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/filesize/4.1.2/filesize.min.js"></script>
+  <script src="/static/speedtest.js"></script>
+</body>
+</html>
