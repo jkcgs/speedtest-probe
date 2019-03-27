@@ -6,50 +6,58 @@
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Hello</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
-        integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.2/css/bootstrap.min.css"
+        integrity="sha384-Smlep5jCw/wG7hdkwQ/Z5nLIefveQRIY9nfy6xoR1uRYBtpZgI6339F5dgvm/e9B" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="/static/styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
 </head>
 <body>
-  <div id="app" class="container">
-    <h3>Speedtest</h3>
+  <div id="app">
+    <nav class="navbar navbar-dark bg-dark text-light">
+      <div class="container">
+        <span class="navbar-brand mb-0 h1">Speedtest probe</span>
+        <span v-if="result && result.download > 0 && result.upload > 0" class="mx-auto text-center">
+          <i class="material-icons">cloud_download</i> {{ result.download | humanbits }}
+          <i class="material-icons">cloud_upload</i> {{ result.upload | humanbits }}
+          <i class="material-icons">flash_on</i> {{ result.ping }} ms
+        </span>
+        <span>
+          Status: {{ status }}
+        </span>
+      </div>
+    </nav>
 
-    <p>Current status: {{ status }}</p>
-
-    <div v-if="client">
-      <p>Your information:</p>
-      <ul>
-        <li>IP: {{ client.query }}</li>
-        <li>
-          ISP: {{ client.isp }}
-          <span v-if="client.isp != client.org">- {{ client.org }}</span>
-          - {{ client.ipType }}
-        </li>
-        <li>Location: {{ client.country }} ({{ client.countryCode }}) - {{ client.region }} - {{ client.city }}</li>
-      </ul>
-    </div>
-    <div v-if="result">
-      <div v-if="result.download > 0">
-        <p>Last result</p>
+    <div class="container mt-3">
+      <div v-if="client">
+        <p>Your information:</p>
         <ul>
-          <li>Download: {{ result.download | humanbits }}</li>
-          <li>Upload: {{ result.upload | humanbits }}</li>
-          <li>Latency: {{ result.ping }} ms</li>
-          <li>Transferred: {{ result.bytes_sent | humanbytes }} up, {{ result.bytes_received | humanbytes }} down </li>
-          <li>Timestamp: {{ result.timestamp }}</li>
+          <li>IP: {{ client.query }}</li>
           <li>
-            Server:
-            <ul>
-              <li>Host: {{ result.server.sponsor }}</li>
-              <li>Location: {{ result.server.country }} - {{ result.server.name }}</li>
-              <li>Host: {{ result.server.host }}</li>
-              <li>Distance: {{ result.server.d.toFixed(2) }} km</li>
-            </ul>
+            ISP: {{ client.isp }} <span v-if="client.isp != client.org">- {{ client.org }}</span>
           </li>
+          <li>Location: {{ client.country }} ({{ client.countryCode }}) - {{ client.region }} - {{ client.city }}</li>
         </ul>
       </div>
+      <div v-if="result">
+        <div v-if="result.download > 0">
+          <p>Last result</p>
+          <ul>
+            <li>Transferred: {{ result.bytes_received | humanbytes }} down, {{ result.bytes_sent | humanbytes }} up</li>
+            <li>Timestamp: {{ result.timestamp }}</li>
+            <li>
+              Server:
+              <ul>
+                <li>Host: {{ result.server.sponsor }}</li>
+                <li>Location: {{ result.server.country }} - {{ result.server.name }}</li>
+                <li>Host: {{ result.server.host }}</li>
+                <li>Distance: {{ result.server.d.toFixed(2) }} km</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
