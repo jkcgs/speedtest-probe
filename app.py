@@ -1,12 +1,14 @@
+from bson.json_util import dumps
 from flask import Flask, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 
+from stprobe import settings, database
 from stprobe.manager import SpeedtestMgr
 from stprobe.logger import logger
 
 # Application initialization
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '$_very_s3cre7!'
+app.config['SECRET_KEY'] = settings.get('session-secret')
 socketio = SocketIO(app, logger=logger)
 
 # Speedtest manager initialization - this starts speed measures.
@@ -28,7 +30,10 @@ def server_list():
 
 @app.route('/results')
 def results():
-    return jsonify(mgr.st.results.dict())
+    return app.response_class(
+        dumps(database.get_results()) + '\n',
+        mimetype=app.config['JSONIFY_MIMETYPE']
+    )
 
 
 @socketio.on('connect')
@@ -37,9 +42,9 @@ def test_connect():
     emit('client_connect', mgr.status)
     emit('client_info', mgr.client_info)
 
-    current = mgr.st.results
-    if current.download > 0 and current.upload > 0:
-        emit('current_results', dict(current.dict()))
+    current = mgr.last_result
+    if current is not None and current['download'] > 0 and current['upload'] > 0:
+        emit('current_results', dumps(current))
 
 
 if __name__ == '__main__':

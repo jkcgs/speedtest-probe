@@ -4,3 +4,4 @@ requests==2.21.0
 speedtest-cli==2.1.1
 eventlet==0.24.1
 ruamel.yaml==0.15.89
+pymongo==3.7.2

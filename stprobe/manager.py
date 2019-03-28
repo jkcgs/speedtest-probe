@@ -4,8 +4,10 @@ from datetime import datetime
 
 import requests
 import speedtest
+from bson.json_util import dumps
 
 from . import settings
+from . import database
 from .logger import logger
 
 
@@ -14,15 +16,13 @@ class SpeedtestMgr:
         self.st = speedtest.Speedtest()
         self.do_run = True
         self.pause = False
+        self.last_result = None
 
-        self._sleep = settings.get('scan-interval')
+        self._sleep = settings.get('scan-interval') * 60
         self._thread = None
         self.__status = "none"
         self.__client_info = None
         self.__all_servers = None
-
-        # Load servers list
-        self.st.get_servers(settings.get('servers'))
 
     def task(self, socketio):
         while self.do_run:
@@ -30,28 +30,56 @@ class SpeedtestMgr:
                 time.sleep(1)
                 continue
 
-            start = datetime.now()
+            start = datetime.utcnow()
+            for server_id in settings.get('servers'):
+                sv = self.st.get_servers([server_id])
+                sv = sv[list(sv.keys())[0]][0]
 
-            logger.debug('Starting speedtest...')
-            self.set_status("started", socketio)
-            socketio.emit('speedtest_started', {'timestamp': str(start)})
+                logger.debug('Starting speedtest with server: %s (%s - %s) %s',
+                             sv['sponsor'], sv['name'], sv['country'], sv['host'])
+                self.set_status("started", socketio)
+                socketio.emit('speedtest_started', {'timestamp': str(start)})
 
-            logger.debug('Testing download speed...')
-            self.set_status("downloading", socketio)
-            self.st.download()
+                # Cancel point
+                if not self.do_run:
+                    break
 
-            logger.debug('Testing upload speed...')
-            self.set_status("uploading", socketio)
-            self.st.upload()
+                logger.debug('Testing download speed...')
+                self.set_status("downloading", socketio)
+                download = self.st.download()
+                logger.debug('Download test finished with %s bits', download)
 
-            logger.debug('Speedtest finished.')
-            self.set_status("finished", socketio)
-            socketio.emit('speedtest_finished', self.st.results.dict())
+                # Cancel point
+                if not self.do_run:
+                    break
+
+                logger.debug('Testing upload speed...')
+                self.set_status("uploading", socketio)
+                upload = self.st.upload()
+                logger.debug('Upload test finished with %s bits', upload)
+
+                # Cancel point
+                if not self.do_run:
+                    break
+
+                results = self.st.results.dict()
+                results['server'] = sv
+                results['batch_timestamp'] = start.isoformat()
+                self.last_result = results
+                database.insert_result(results)
+
+                logger.debug('Speedtest finished: %s', results)
+                self.set_status("finished", socketio)
+                socketio.emit('speedtest_finished', dumps(results))
+
+            # Cancel point
+            if not self.do_run:
+                break
 
             # Run at the next scheduled time
-            diff = self._sleep - (datetime.now() - start).total_seconds()
+            diff = max(self._sleep - (datetime.utcnow() - start).total_seconds(), 15)
             logger.debug('Waiting for {:.3f} seconds for the next measurement.'.format(diff))
-            time.sleep(max(diff, 0))
+            time.sleep(diff)
 
     def start(self, socketio):
         if self._thread is not None:
