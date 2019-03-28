@@ -1,0 +1,7 @@
+# Interval in minutes
+scan-interval: 2
+# List of servers
+servers:
+- 17307 # Grupo GTD - Valdivia
+- 939   # Telefónica Chile - Santiago
+- 1779  # Comcast - Miami

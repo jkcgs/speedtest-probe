@@ -5,6 +5,7 @@ from datetime import datetime
 import requests
 import speedtest
 
+from . import settings
 from .logger import logger
 
 
@@ -14,14 +15,14 @@ class SpeedtestMgr:
         self.do_run = True
         self.pause = False
 
-        self._sleep = 60
+        self._sleep = settings.get('scan-interval')
         self._thread = None
         self.__status = "none"
         self.__client_info = None
         self.__all_servers = None
 
         # Load servers list
-        self.st.get_servers([17307])
+        self.st.get_servers(settings.get('servers'))
 
     def task(self, socketio):
         while self.do_run:
