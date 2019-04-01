@@ -1,3 +1,5 @@
+import json
+
 from bson.json_util import dumps
 from flask import Flask, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
@@ -39,12 +41,14 @@ def results():
 @socketio.on('connect')
 def test_connect():
     logger.info('Client connected')
-    emit('client_connect', mgr.status)
-    emit('client_info', mgr.client_info)
+    emit('client_connect', {
+        'status': mgr.status,
+        'client_info': mgr.client_info
+    })
 
     current = mgr.last_result
     if current is not None and current['download'] > 0 and current['upload'] > 0:
-        emit('current_results', dumps(current))
+        emit('current_results', json.loads(dumps(current)))
 
 
 if __name__ == '__main__':

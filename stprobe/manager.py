@@ -1,3 +1,4 @@
+import json
 import threading
 import time
 from datetime import datetime
@@ -30,6 +31,7 @@ class SpeedtestMgr:
                 time.sleep(1)
                 continue
 
+            batch_results = []
             start = datetime.utcnow()
             for server_id in settings.get('servers'):
                 sv = self.st.get_servers([server_id])
@@ -37,15 +39,14 @@ class SpeedtestMgr:
 
                 logger.debug('Starting speedtest with server: %s (%s - %s) %s',
                              sv['sponsor'], sv['name'], sv['country'], sv['host'])
-                self.set_status("started", socketio)
-                socketio.emit('speedtest_started', {'timestamp': str(start)})
+                self.update_status(socketio, "started", {'timestamp': str(start)})
 
                 # Cancel point
                 if not self.do_run:
                     break
 
                 logger.debug('Testing download speed...')
-                self.set_status("downloading", socketio)
+                self.update_status(socketio, "downloading")
                 download = self.st.download()
                 logger.debug('Download test finished with %s bits', download)
 
@@ -54,7 +55,7 @@ class SpeedtestMgr:
                     break
 
                 logger.debug('Testing upload speed...')
-                self.set_status("uploading", socketio)
+                self.update_status(socketio, "uploading")
                 upload = self.st.upload()
                 logger.debug('Upload test finished with %s bits', upload)
 
@@ -65,12 +66,12 @@ class SpeedtestMgr:
                 results = self.st.results.dict()
                 results['server'] = sv
                 results['batch_timestamp'] = start.isoformat()
+                batch_results.append(results)
                 self.last_result = results
                 database.insert_result(results)
 
                 logger.debug('Speedtest finished: %s', results)
-                self.set_status("finished", socketio)
-                socketio.emit('speedtest_finished', dumps(results))
+                self.update_status(socketio, "finished", json.loads(dumps(results)))
 
             # Cancel point
             if not self.do_run:
@@ -78,6 +79,10 @@ class SpeedtestMgr:
 
             # Run at the next scheduled time
             diff = max(self._sleep - (datetime.utcnow() - start).total_seconds(), 15)
+            self.update_status(socketio, "batch_finished", {
+                'sleep_time': diff, 'results': json.loads(dumps(batch_results))
+            })
+
             logger.debug('Waiting for {:.3f} seconds for the next measurement.'.format(diff))
             time.sleep(diff)
 
@@ -129,8 +134,8 @@ class SpeedtestMgr:
 
         self.st.get_servers(server_list)
 
-    def set_status(self, status, socketio=None):
+    def update_status(self, socketio, status, data=None):
         self.__status = status
 
-        if socketio is not None:
-            socketio.emit('speedtest_update', status)
+        payload = {'status': status, 'data': data}
+        socketio.emit('speedtest_update', payload)

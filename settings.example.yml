@@ -1,7 +1,7 @@
 # MongoDB database URI
 database-uri: mongodb://127.0.0.1:27017/stprobe
 # Socket.IO Session secret
-session-secret: {very_secret}
+session-secret: "{very_secret}"
 # Interval in minutes
 scan-interval: 2
 # List of servers

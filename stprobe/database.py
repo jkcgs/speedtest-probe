@@ -14,7 +14,7 @@ logger.info('Connected to database, %s measurement entries found', ms.count())
 
 def get_results(limit=10):
     n_servers = len(settings.get('servers'))
-    return ms.find(limit=limit*n_servers)
+    return ms.find()
 
 
 def insert_result(result):

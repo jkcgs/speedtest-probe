@@ -39,29 +39,35 @@
           <li>Location: {{ client.country }} ({{ client.countryCode }}) - {{ client.region }} - {{ client.city }}</li>
         </ul>
       </div>
-      <div v-if="result">
-        <div v-if="result.download > 0">
-          <p>Last result</p>
-          <ul>
-            <li>Transferred: {{ result.bytes_received | humanbytes }} down, {{ result.bytes_sent | humanbytes }} up</li>
-            <li>Timestamp: {{ result.timestamp }}</li>
-            <li>
-              Server:
-              <ul>
-                <li>Host: {{ result.server.sponsor }}</li>
-                <li>Location: {{ result.server.country }} - {{ result.server.name }}</li>
-                <li>Host: {{ result.server.host }}</li>
-                <li>Distance: {{ result.server.d.toFixed(2) }} km</li>
-              </ul>
-            </li>
-          </ul>
-        </div>
+      <div v-if="result && result.download > 0">
+        <p>Last result</p>
+        <ul>
+          <li>Transferred: {{ result.bytes_received | humanbytes }} down, {{ result.bytes_sent | humanbytes }} up</li>
+          <li>Timestamp: {{ result.timestamp }}</li>
+          <li>
+            Server:
+            <ul>
+              <li>Host: {{ result.server.sponsor }}</li>
+              <li>Location: {{ result.server.country }} - {{ result.server.name }}</li>
+              <li>Host: {{ result.server.host }}</li>
+              <li>Distance: {{ result.server.d.toFixed(2) }} km</li>
+            </ul>
+          </li>
+        </ul>
       </div>
+    </div>
+
+    <h3>Speed graph</h3>
+    <div class="row">
+      <canvas id="speed-chart"></canvas>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/filesize/4.1.2/filesize.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
   <script src="/static/speedtest.js"></script>
 </body>
 </html>
